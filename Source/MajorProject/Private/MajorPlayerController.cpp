@@ -3,6 +3,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
+class ACharacter;
+
 void AMajorPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -12,8 +14,14 @@ void AMajorPlayerController::BeginPlay()
 void AMajorPlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
-	//UpdateCharacterRotationBasedOnMovement();
+
+	if (IsSprinting)
+	{
+		if (!IsMovingForward())
+		{
+			RequestSprintEnd();
+		}
+	}
 }
 
 void AMajorPlayerController::SetupInputComponent()
@@ -27,27 +35,11 @@ void AMajorPlayerController::SetupInputComponent()
 		InputComponent->BindAction(TEXT("Sprint"), EInputEvent::IE_Pressed, this, &AMajorPlayerController::RequestSprintStart);
 		InputComponent->BindAction(TEXT("Sprint"), EInputEvent::IE_Released, this, &AMajorPlayerController::RequestSprintEnd);
 
-		//InputComponent->BindAxis(TEXT("MoveForward"), this, &AMajorPlayerController::RequestMoveForward);
-		//InputComponent->BindAxis(TEXT("MoveRight"), this, &AMajorPlayerController::RequestMoveRight);
 		InputComponent->BindAxis(TEXT("LookUp"), this, &AMajorPlayerController::RequestLookUp);
 		InputComponent->BindAxis(TEXT("LookRight"), this, &AMajorPlayerController::RequestLookRight);
 	}
 }
 
-//void AMajorPlayerController::UpdateCharacterRotationBasedOnMovement()
-//{
-//	// Check if movement input is applied
-//	if (GetCharacter()->GetVelocity().Size() > 0.0f)
-//	{
-//		// Character is moving, enable "Orient Rotation to Movement"
-//		GetCharacter()->GetCharacterMovement()->bOrientRotationToMovement = true;
-//	}
-//	else
-//	{
-//		// No movement input, disable rotation to movement
-//		GetCharacter()->GetCharacterMovement()->bOrientRotationToMovement = false;
-//	}
-//}
 
 void AMajorPlayerController::RequestMoveForward(float AxisValue)
 {
@@ -106,17 +98,60 @@ void AMajorPlayerController::RequestCrouch()
 
 void AMajorPlayerController::RequestSprintStart()
 {
-	if (GetCharacter())
+	//if (IsMovingForward())
+	ACharacter* ThisCharacter = GetCharacter();
+	if (ThisCharacter)
 	{
-		GetCharacter()->GetCharacterMovement()->MaxWalkSpeed += SprintSpeed;
+		// Only start sprinting if the player is moving forward
+		if (IsMovingForward())
+		{
+			UCharacterMovementComponent* MovementComponent = GetCharacter()->GetCharacterMovement();
+			if (MovementComponent)
+			{
+				MovementComponent->MaxWalkSpeed = SprintSpeed;
+				UE_LOG(LogTemp, Warning, TEXT("Sprint started"));
+
+				IsSprinting = true;
+			}
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Sprint restricted: Not moving forward"));
 	}
 }
 
 void AMajorPlayerController::RequestSprintEnd()
 {
+	
 	if (GetCharacter())
 	{
-		GetCharacter()->GetCharacterMovement()->MaxWalkSpeed -= SprintSpeed;
+		UCharacterMovementComponent* MovementComponent = GetCharacter()->GetCharacterMovement();
+		if (MovementComponent)
+		{
+			MovementComponent->MaxWalkSpeed = WalkSpeed; // Reset to normal walking speed
+			IsSprinting = false;
+		}
 	}
+}
+
+
+bool AMajorPlayerController::IsMovingForward() const
+{
+	ACharacter* LocalCharacter = GetCharacter();
+	if (LocalCharacter)
+	{
+		FVector Velocity = LocalCharacter->GetVelocity();
+		FVector ForwardVector = LocalCharacter->GetActorForwardVector();
+
+		FVector NormalizedVelocity = Velocity.GetSafeNormal();
+		FVector NormalizedForward = ForwardVector.GetSafeNormal();
+
+		float DotProduct = FVector::DotProduct(NormalizedVelocity, NormalizedForward);
+
+		return Velocity.SizeSquared() > 0.0f && DotProduct > 0.7f; // Adjusted threshold
+	}
+
+	return false;
 }
 
