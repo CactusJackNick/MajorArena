@@ -25,7 +25,11 @@ public:
 
 	void RequestJump();
 	void RequestCrouch();
+
+	UFUNCTION(BlueprintCallable, Category = "Input")
 	void RequestSprintStart();
+	
+	UFUNCTION(BlueprintCallable, Category = "Input")
 	void RequestSprintEnd();
 
 	// Base lookup rate, in deg/sec. Other scaling may affect final lookup rate.

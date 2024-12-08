@@ -8,7 +8,13 @@ class ACharacter;
 void AMajorPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-	//GameModeRef = Cast<ATantrumGameModeBase>(GetWorld()->GetAuthGameMode());
+	// Set input mode to Game Only
+	FInputModeGameOnly InputMode;
+	SetInputMode(InputMode);
+
+	// Ensure mouse cursor is hidden during gameplay
+	bShowMouseCursor = false;
+	//GameModeRef = Cast<AMajorGameModeBase>(GetWorld()->GetAuthGameMode());
 }
 
 void AMajorPlayerController::Tick(float DeltaTime)
@@ -32,8 +38,9 @@ void AMajorPlayerController::SetupInputComponent()
 		InputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &AMajorPlayerController::RequestJump);
 		InputComponent->BindAction(TEXT("Crouch"), EInputEvent::IE_Pressed, this, &AMajorPlayerController::RequestCrouch);
 
-		InputComponent->BindAction(TEXT("Sprint"), EInputEvent::IE_Pressed, this, &AMajorPlayerController::RequestSprintStart);
-		InputComponent->BindAction(TEXT("Sprint"), EInputEvent::IE_Released, this, &AMajorPlayerController::RequestSprintEnd);
+		//FInputActionBinding sprintPressed = InputComponent->BindAction(TEXT("Sprint"), EInputEvent::IE_Pressed, this, &AMajorPlayerController::RequestSprintStart);
+		//InputComponent->BindAction(TEXT("Sprint"), EInputEvent::IE_Released, this, &AMajorPlayerController::RequestSprintEnd);
+		//sprintPressed.bConsumeInput = false;
 
 		InputComponent->BindAxis(TEXT("LookUp"), this, &AMajorPlayerController::RequestLookUp);
 		InputComponent->BindAxis(TEXT("LookRight"), this, &AMajorPlayerController::RequestLookRight);
