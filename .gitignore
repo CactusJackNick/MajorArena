@@ -77,3 +77,6 @@ DerivedDataCache/*
 # -----------------------------------------------------
 *.uasset
 
+# Ignore Starter Content
+Content/StarterContent/
+
